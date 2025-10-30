@@ -1,6 +1,5 @@
-## 🧭 Table of Contents
+# 💻 DAA/DSA Essential Code Repository
 
-* [Key Topics Covered](#key-topics-covered)
-* [How to Use This Repository](#how-to-use-this-repository)
-* [Technologies Used](#technologies-used)
-* [Contributing](#contributing)
+A foundational collection of **basic and crucial programs** covering core concepts in **Design and Analysis of Algorithms (DAA)** and **Data Structures and Algorithms (DSA)**.
+
+This repository serves as a **quick-reference guide** and a hands-on learning resource for common algorithms, fundamental data structures, and essential coding patterns.
