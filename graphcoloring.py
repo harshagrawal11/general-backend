@@ -1,164 +1,139 @@
-import time
 import sys
+from typing import List, Dict, Optional
 
-# Set a higher recursion limit for potentially large graphs, useful for backtracking algorithms.
-# Uncomment the line below if you encounter a RecursionError for large inputs.
-# sys.setrecursionlimit(2000)
+# Set recursion limit higher for complex graphs
+sys.setrecursionlimit(2000)
 
-def is_safe(v, graph, color, c):
+def is_safe(v: int, graph: List[List[int]], color: List[int], c: int, V: int) -> bool:
     """
     Checks if assigning color 'c' to vertex 'v' is safe.
-    It is safe if no adjacent vertex 'u' already has color 'c'.
+    It is safe if no adjacent vertex 'i' currently has color 'c'.
 
-    Args:
-        v (int): The current vertex index (0 to N-1).
-        graph (list of list of int): Adjacency matrix representation of the graph.
-        color (list of int): Array storing the color assigned to each vertex so far.
-        c (int): The color we are trying to assign (1 to m).
-
-    Returns:
-        bool: True if the color assignment is valid, False otherwise.
+    :param v: The current vertex index (0 to V-1).
+    :param graph: The V x V adjacency matrix.
+    :param color: The list of colors assigned to vertices so far.
+    :param c: The color being tested (1 to k).
+    :param V: Total number of vertices.
+    :return: True if the color assignment is valid, False otherwise.
     """
-    # Iterate through all vertices 'u' (0 to N-1)
-    for u in range(len(graph)):
-        # Check if 'v' and 'u' are adjacent (graph[v][u] == 1)
-        # AND if 'u' already has the color 'c' (color[u] == c)
-        if graph[v][u] == 1 and color[u] == c:
+    for i in range(V):
+        # Check if 'v' and 'i' are adjacent AND 'i' already has the color 'c'
+        if graph[v][i] == 1 and color[i] == c:
             return False
     return True
 
-def graph_coloring_util(m, graph, color, v):
+def graph_coloring_util(v: int, k: int, V: int, graph: List[List[int]], 
+                        color: List[int], solutions: List[List[int]]) -> None:
     """
-    A recursive utility function to solve the graph coloring problem using backtracking.
+    Recursive backtracking utility function to find all k-colorings.
 
-    Args:
-        m (int): The maximum number of colors allowed.
-        graph (list of list of int): Adjacency matrix.
-        color (list of int): Current color assignments (will be modified in-place).
-        v (int): The current vertex being considered (index 0 to N-1).
-
-    Returns:
-        bool: True if a valid coloring is found starting from vertex 'v', False otherwise.
+    :param v: The current vertex index to color.
+    :param k: The number of colors available (k).
+    :param V: Total number of vertices.
+    :param graph: The V x V adjacency matrix.
+    :param color: The current color assignment list (modified recursively).
+    :param solutions: List to store all valid color assignment lists.
     """
-    N = len(graph)
+    # Base Case: If all vertices are successfully colored, store the solution
+    if v == V:
+        solutions.append(list(color))
+        return
 
-    # Base case: If all vertices are colored, return True
-    if v == N:
-        return True
-
-    # Try assigning colors 1 through m to the current vertex 'v'
-    for c in range(1, m + 1):
-        if is_safe(v, graph, color, c):
-            # 1. Assign color 'c' to vertex 'v'
-            color[v] = c
-
-            # 2. Recurse to the next vertex (v + 1)
-            if graph_coloring_util(m, graph, color, v + 1):
-                return True
-
-            # 3. Backtrack: If assigning color 'c' didn't lead to a solution,
-            #    un-assign the color (reset to 0) and try the next color.
+    # Try all available colors (1 to k) for vertex 'v'
+    for c in range(1, k + 1):
+        if is_safe(v, graph, color, c, V):
+            color[v] = c  # Assign the color
+            
+            # Recur for the next vertex (v + 1)
+            graph_coloring_util(v + 1, k, V, graph, color, solutions)
+            
+            # Backtrack: Unassign the color before the next iteration
+            # This is crucial for exploring other possible color assignments
             color[v] = 0
 
-    # If no color can be assigned to this vertex, return False
-    return False
-
-def graph_coloring(graph, m):
-    """
-    Main function to solve the M-coloring problem.
-
-    Args:
-        graph (list of list of int): Adjacency matrix of the graph.
-        m (int): Maximum number of colors allowed.
-    """
-    N = len(graph) # Number of vertices
-    # Initialize color array. color[i] will store the color of vertex i. 0 means uncolored.
-    color = [0] * N
-
-    print(f"--- Graph Coloring Solver (M={m}) ---")
-    print(f"Graph with {N} vertices and {m} colors maximum.")
-
-    start_time = time.time()
-
-    if not graph_coloring_util(m, graph, color, 0):
-        print("\nSolution Not Found:")
-        print(f"The graph cannot be colored using {m} colors.")
-        return False
-
-    end_time = time.time()
-
-    # If the utility function returns True, a solution is found
-    print("\nSolution Found:")
-    print(f"Coloring (Vertex Index -> Color Index [1 to {m}]):")
-    for i in range(N):
-        print(f"  Vertex {i}: Color {color[i]}")
-
-    print(f"\nTime taken: {end_time - start_time:.6f} seconds")
-    return True
-
-def get_user_input_graph():
-    """
-    Interactively prompts the user for the graph structure and number of colors.
-    """
-    # Get number of vertices (N)
-    while True:
-        try:
-            N = int(input("Enter the number of vertices (N): "))
-            if N <= 0:
-                print("Number of vertices must be a positive integer.")
-                continue
-            break
-        except ValueError:
-            print("Invalid input. Please enter a whole number.")
-
-    # Get maximum number of colors (M)
-    while True:
-        try:
-            M = int(input(f"Enter the maximum number of colors (M): "))
-            if M <= 0:
-                print("Number of colors must be a positive integer.")
-                continue
-            break
-        except ValueError:
-            print("Invalid input. Please enter a whole number.")
-
-    # Get adjacency matrix
-    print(f"\nNow enter the {N}x{N} Adjacency Matrix (0 for no edge, 1 for edge):")
-    graph = []
-    for i in range(N):
-        while True:
-            try:
-                row_str = input(f"Enter row {i} (space-separated 0s and 1s): ")
-                row = [int(x) for x in row_str.split()]
-
-                if len(row) != N:
-                    print(f"Row must contain exactly {N} values. Try again.")
-                    continue
-
-                # Basic validation for 0/1 inputs
-                if not all(x in [0, 1] for x in row):
-                    print("Invalid input. Matrix entries must be 0 or 1.")
-                    continue
-
-                graph.append(row)
-                break
-            except ValueError:
-                print("Invalid input format. Please ensure all inputs are space-separated numbers.")
-            except Exception as e:
-                print(f"An unexpected error occurred during row input: {e}")
-
-    return graph, M
-
-# --- Main execution block for interactive mode ---
-if __name__ == "__main__":
+def solve_graph_coloring():
+    """Main function to handle input, find the minimum chromatic number, and display results."""
+    print("--- Graph Coloring Problem Solver (Backtracking) ---")
+    
     try:
-        # Prompt user for graph data
-        input_graph, input_m = get_user_input_graph()
+        # 1. Take number of vertices as input
+        V = int(input("Enter the number of vertices (V): "))
+        if V <= 0:
+            print("Number of vertices must be positive.")
+            return
 
-        # Solve the graph coloring problem
-        graph_coloring(input_graph, input_m)
+        print(f"\n2. Enter the {V}x{V} Adjacency Matrix (0 or 1):")
+        
+        # 2. Accept adjacency matrix representation
+        graph = []
+        for i in range(V):
+            row_input = input(f"Enter row {i+1} (space-separated {V} values): ").split()
+            if len(row_input) != V:
+                print(f"Error: Expected {V} values, got {len(row_input)}. Exiting.")
+                return
+            graph.append([int(x) for x in row_input])
 
+        # Validate symmetry for an undirected graph
+        for i in range(V):
+            for j in range(V):
+                if graph[i][j] != graph[j][i]:
+                    print("Error: The matrix is not symmetric (required for undirected graph). Exiting.")
+                    return
+                if graph[i][j] not in (0, 1):
+                    print("Error: Matrix must contain only 0s and 1s. Exiting.")
+                    return
+
+    except ValueError:
+        print("\nInvalid input. Please ensure all inputs are correct numbers.")
+        return
     except Exception as e:
-        # Catch unexpected errors during execution
-        print(f"\nAn unexpected error occurred: {e}")
-        print("Please ensure your graph input was correctly formatted.")
+        print(f"\nAn error occurred during input: {e}")
+        return
+
+    # 4. Find the minimum number of colors (Chromatic Number, χ(G))
+    min_k = V
+    min_solutions = []
+
+    print("\n--- Solving ---")
+    
+    # Start checking for k=1 color up to V colors
+    for k in range(1, V + 1):
+        solutions = []
+        # Initialize color array: 0 means uncolored
+        color = [0] * V
+        
+        # Start coloring from the first vertex (index 0)
+        graph_coloring_util(0, k, V, graph, color, solutions)
+        
+        if solutions:
+            # If solutions are found for this 'k', it is the minimum required
+            min_k = k
+            min_solutions = solutions
+            break
+
+    # 4. Display results
+    print("-" * 50)
+    if not min_solutions:
+        print("Could not find a valid coloring for this graph.")
+        return
+
+    print(f"Minimum Number of Colors Required (Chromatic Number, χ(G)): **{min_k}**")
+    print(f"Number of distinct valid color assignments using {min_k} colors: {len(min_solutions)}")
+    
+    # Display all valid color assignments
+    print("\nAll Valid Color Assignments (Vertex Index: Color):")
+    for i, sol in enumerate(min_solutions):
+        # Format the output for clarity
+        assignment = {f'V{j+1}': sol[j] for j in range(V)}
+        print(f"  Assignment {i+1}: {assignment}")
+
+# Example Input (Graph from Q2, χ(G)=3):
+# V=5
+# Row 1: 0 1 1 0 0
+# Row 2: 1 0 1 1 0
+# Row 3: 1 1 0 0 1
+# Row 4: 0 1 0 0 1
+# Row 5: 0 0 1 1 0
+
+if __name__ == "__main__":
+    solve_graph_coloring()
